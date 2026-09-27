@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>自动熟肉</title>
+    <link rel="stylesheet" href="/static/styles.css?v=20260914-2" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="brand" href="/" aria-label="字幕工作台首页">
+        <span class="brand-mark"><b>字</b><i>幕</i></span>
+        <span><strong>字幕工作台</strong><small>JA → ZH / CUT 01</small></span>
+      </a>
+      <div class="masthead-actions">
+        <span class="local-badge"><i></i> 仅本机访问</span>
+        <button class="text-button" id="doctor-button" type="button">检查运行环境</button>
+      </div>
+    </header>
+
+    <main class="studio-shell">
+      <aside class="control-deck" aria-label="字幕生成设置">
+        <form id="job-form">
+          <section class="control-section source-section">
+            <div class="section-heading">
+              <span class="eyebrow">素材</span>
+              <h1>加字幕</h1>
+            </div>
+
+            <input id="video-file" type="file" accept="video/*,.mkv,.m4v,.ts" hidden />
+            <button class="drop-frame" id="drop-frame" type="button">
+              <span class="frame-code">IN&nbsp;&nbsp;00:00:00:00</span>
+              <span class="frame-center">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M16 4v16m0-16-6 6m6-6 6 6M6 21v5h20v-5" />
+                </svg>
+                <strong id="file-title">选择或拖入视频</strong>
+                <small id="file-meta">MP4 · MKV · MOV · WEBM · TS</small>
+              </span>
+              <span class="corner corner-a"></span><span class="corner corner-b"></span>
+              <span class="corner corner-c"></span><span class="corner corner-d"></span>
+            </button>
+
+            <label class="field path-field">
+              <span>或使用本机视频路径</span>
+              <input id="source-path" type="text" placeholder="D:\videos\episode.mp4" />
+            </label>
+            <label class="field path-field">
+              <span>输出目录</span>
+              <input id="output-dir" type="text" />
+            </label>
+          </section>
+
+          <section class="control-section api-section" id="api-section">
+            <div class="section-line">
+              <div>
+                <span class="eyebrow">在线翻译</span>
+                <h2>DeepSeek</h2>
+              </div>
+              <span class="key-state" id="key-state"><i></i><b>未设置密钥</b></span>
+            </div>
+            <label class="field secret-field">
+              <span>API Key</span>
+              <span class="input-action">
+                <input id="api-key" type="password" autocomplete="off" placeholder="sk-…" />
+                <button id="toggle-key" type="button" aria-label="显示或隐藏密钥">显示</button>
+              </span>
+            </label>
+            <div class="key-actions">
+              <label class="check compact"><input id="remember-key" type="checkbox" checked /><span>保存到系统凭据库</span></label>
+              <span>
+                <button class="quiet-button" id="clear-key" type="button">清除</button>
+                <button class="quiet-button emphatic" id="save-key" type="button">保存密钥</button>
+              </span>
+            </div>
+            <p class="microcopy" id="key-note">接入线上模型</p>
+          </section>
+
+          <section class="control-section mode-section">
+            <span class="eyebrow">交付内容</span>
+            <div class="mode-switch" role="radiogroup" aria-label="字幕语言">
+              <label><input type="radio" name="subtitle-mode" value="zh" checked /><span><b>中文字幕</b><small>识别、翻译并润色</small></span></label>
+              <label><input type="radio" name="subtitle-mode" value="ja" /><span><b>日语原文</b><small>不调用在线 API</small></span></label>
+            </div>
+            <div class="check-grid">
+              <label class="check"><input id="subtitle-only" type="checkbox" /><span>只生成字幕文件</span></label>
+              <label class="check" id="polish-option"><input id="no-polish" type="checkbox" /><span>只保留忠实直译</span></label>
+              <label class="check"><input id="force" type="checkbox" /><span>忽略缓存重新处理</span></label>
+            </div>
+          </section>
+
+          <details class="advanced-section">
+            <summary><span>精细设置</span><small>识别、字幕与编码</small></summary>
+            <div class="advanced-body">
+              <div class="field-grid three">
+                <label class="field"><span>识别档位</span><select id="preset"><option value="auto">自动</option><option value="lite">轻量</option><option value="balanced">均衡</option><option value="quality">质量</option></select></label>
+                <label class="field"><span>运行设备</span><select id="device"><option value="auto">自动</option><option value="cuda">CUDA</option><option value="cpu">CPU</option></select></label>
+                <label class="field"><span>质量模式</span><select id="quality-mode"><option value="warn">只告警</option><option value="off">关闭</option><option value="strict">严格报告</option></select></label>
+              </div>
+
+              <div class="subsection-title"><span>对白覆盖</span><i></i></div>
+              <div class="check-grid">
+                <label class="check"><input id="vad-filter" type="checkbox" checked /><span>启用 VAD 主识别</span></label>
+                <label class="check"><input id="gap-recovery" type="checkbox" checked /><span>回捞无字幕空白区</span></label>
+              </div>
+              <label class="range-field"><span>VAD 灵敏度 <output id="vad-threshold-value">0.30</output></span><input id="vad-threshold" type="range" min="0.05" max="0.95" step="0.05" value="0.30" /></label>
+              <label class="range-field"><span>最短回捞空白 <output id="min-gap-value">1.5s</output></span><input id="min-gap" type="range" min="0.5" max="8" step="0.5" value="1.5" /></label>
+
+              <div class="subsection-title"><span>翻译与排版</span><i></i></div>
+              <div class="field-grid two">
+                <label class="field"><span>DeepSeek 模型</span><select id="model"><option value="deepseek-v4-flash">V4 Flash · 推荐</option><option value="deepseek-v4-pro">V4 Pro</option></select></label>
+                <label class="field"><span>每批字幕</span><input id="batch-size" type="number" min="1" max="64" value="12" /></label>
+              </div>
+              <label class="range-field"><span>每行最多字符 <output id="max-chars-value">18</output></span><input id="max-chars" type="range" min="8" max="40" value="18" /></label>
+              <label class="range-field"><span>字幕字号 <output id="font-size-value">48</output></span><input id="font-size" type="range" min="20" max="96" step="2" value="48" /></label>
+
+              <div class="subsection-title"><span>成片编码</span><i></i></div>
+              <div class="field-grid two">
+                <label class="field"><span>视频编码</span><select id="video-codec"><option value="h264">H.264</option><option value="h265">H.265</option></select></label>
+                <label class="field"><span>编码速度</span><select id="video-preset"><option value="veryfast">很快</option><option value="fast">快</option><option value="medium">均衡</option><option value="slow">慢 / 更小</option></select></label>
+              </div>
+              <label class="range-field"><span>画质 CRF <output id="video-crf-value">18</output></span><input id="video-crf" type="range" min="12" max="32" value="18" /></label>
+            </div>
+          </details>
+
+          <div class="launch-dock">
+            <button class="launch-button" id="start-button" type="submit"><span>生成中文字幕成片</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" /></svg></button>
+            <p>1/1</p>
+          </div>
+        </form>
+      </aside>
+
+      <section class="monitor-deck" aria-label="处理进度与结果">
+        <div class="monitor-head">
+          <div>
+            <span class="eyebrow">当前片段</span>
+            <h2 id="job-title">尚未装载素材</h2>
+          </div>
+          <div class="monitor-actions">
+            <button class="quiet-button danger" id="cancel-button" type="button" hidden>停止任务</button>
+            <button class="quiet-button" id="open-output" type="button" hidden>打开输出目录</button>
+          </div>
+        </div>
+
+        <section class="transport" id="transport" style="--progress: 0%" aria-label="处理阶段">
+          <div class="transport-meta"><span id="job-stage">等待素材</span><b id="progress-label">0%</b></div>
+          <div class="timeline-rail"><i class="timeline-fill"></i><b class="playhead"></b></div>
+          <ol class="stage-list">
+            <li data-threshold="10"><i></i><span>取音轨</span></li>
+            <li data-threshold="28"><i></i><span>识别</span></li>
+            <li data-threshold="48"><i></i><span>翻译</span></li>
+            <li data-threshold="66"><i></i><span>润色</span></li>
+            <li data-threshold="82"><i></i><span>排版</span></li>
+            <li data-threshold="93"><i></i><span>成片</span></li>
+          </ol>
+        </section>
+
+        <section class="log-panel">
+          <div class="panel-heading"><span><i class="record-dot"></i>运行记录</span><button class="text-button" id="clear-log" type="button">清空显示</button></div>
+          <pre id="job-log" tabindex="0">识别、翻译、编码日志。</pre>
+        </section>
+
+        <section class="results-panel" id="results-panel">
+          <div class="panel-heading"><span>输出片段</span><small id="result-count">等待生成</small></div>
+          <div class="empty-result" id="empty-result">
+            <span class="empty-reel" aria-hidden="true"><i></i><i></i><i></i></span>
+            <p>成片、字幕和质量报告</p>
+          </div>
+          <video id="video-preview" controls playsinline hidden></video>
+          <div class="file-list" id="file-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/static/app.js?v=20260914-2" defer></script>
+  </body>
+</html>
