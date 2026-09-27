@@ -13,6 +13,7 @@ class DeviceRuntimeTests(unittest.TestCase):
     def test_conda_library_bin_is_added_to_windows_dll_search(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             prefix = Path(temp)
+            path_type = type(prefix)
             library_bin = prefix / "Library" / "bin"
             library_bin.mkdir(parents=True)
             handle = object()
@@ -20,6 +21,7 @@ class DeviceRuntimeTests(unittest.TestCase):
 
             with (
                 patch.object(device.os, "name", "nt"),
+                patch.object(device, "Path", path_type),
                 patch.object(device.sys, "prefix", str(prefix)),
                 patch.dict(
                     os.environ,
